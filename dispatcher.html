@@ -3,43 +3,18 @@
 <head>
   <title>Dispatcher Live View</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial; text-align: center; margin:0; padding:20px; }
+    video { width:100%; max-width:600px; border:1px solid #ccc; margin-top:10px; }
+  </style>
 </head>
 <body>
-<h2>Dispatcher Live View</h2>
+
+<h2>Dispatcher Live Camera</h2>
 <video id="dispatcherVideo" autoplay playsinline></video>
 
-<script src="https://cdn.jsdelivr.net/npm/simple-peer@9/simplepeer.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js"></script>
+<!-- You can later add WebRTC / signaling code here -->
+<p>Live stream will appear here once connected.</p>
 
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyCxgJrDBr0PNvOG6rd-N1ox6-Tw3-dgE7U",
-    authDomain: "liveview-68758.firebaseapp.com",
-    projectId: "liveview-68758",
-    storageBucket: "liveview-68758.firebasestorage.app",
-    messagingSenderId: "1022135977860",
-    appId: "1:1022135977860:web:68cf35fba5acd02020ffd1"
-  };
-  const app = firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-
-  const video = document.getElementById("dispatcherVideo");
-  const callDoc = db.collection("calls").doc("demo-call");
-  const peer = new SimplePeer({ initiator:false, trickle:false });
-
-  peer.on('signal', async data => {
-    await callDoc.set({ answer:data }, { merge:true });
-  });
-
-  peer.on('stream', stream => {
-    video.srcObject = stream;
-  });
-
-  callDoc.onSnapshot(snapshot => {
-    const data = snapshot.data();
-    if (data?.offer) peer.signal(data.offer);
-  });
-</script>
 </body>
 </html>
