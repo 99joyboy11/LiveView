@@ -16,26 +16,63 @@
 <br>
 <button id="startBtn">Start Live Stream</button>
 
+<script src="https://cdn.jsdelivr.net/npm/simple-peer@9/simplepeer.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js"></script>
+
 <script>
 const startBtn = document.getElementById("startBtn");
 const video = document.getElementById("video");
 
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyCxgJrDBr0PNvOG6rd-N1ox6-Tw3-dgE7U",
+  authDomain: "liveview-68758.firebaseapp.com",
+  projectId: "liveview-68758",
+  storageBucket: "liveview-68758.firebasestorage.app",
+  messagingSenderId: "1022135977860",
+  appId: "1:1022135977860:web:68cf35fba5acd02020ffd1"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 startBtn.addEventListener("click", async () => {
-  startBtn.disabled = true; // prevent multiple taps
+  startBtn.disabled = true;
 
   try {
+    // Open camera
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: "environment" },
       audio: false
     });
-
-    // Set the stream
     video.srcObject = stream;
-
-    // Some mobile browsers require explicit play()
-    await video.play();
+    await video.play(); // ensure mobile plays
 
     console.log("Camera opened successfully!");
+
+    // Firestore call document
+    const callDoc = db.collection("calls").doc("demo-call");
+
+    // SimplePeer initiator
+    const peer = new SimplePeer({ initiator: true, trickle: false, stream });
+
+    peer.on('signal', async data => {
+      await callDoc.set({ offer: data, status: "calling" });
+      console.log("Offer sent to dispatcher");
+    });
+
+    peer.on('connect', () => console.log("Peer connected!"));
+    peer.on('error', err => console.error("Peer error:", err));
+
+    // Listen for answer from dispatcher
+    callDoc.onSnapshot(snapshot => {
+      const data = snapshot.data();
+      if (data?.answer) {
+        console.log("Answer received from dispatcher");
+        peer.signal(data.answer);
+      }
+    });
+
   } catch (err) {
     alert("Camera error: " + err.message);
     console.error(err);
