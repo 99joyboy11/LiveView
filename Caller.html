@@ -1,77 +1,17 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Mobile Caller Live Stream</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: Arial; text-align:center; margin:0; padding:20px; }
-    video { width:100%; max-width:500px; border:1px solid #ccc; margin-top:10px; }
-    button { padding:10px 20px; font-size:16px; }
-  </style>
-</head>
-<body>
-
-<h2>Mobile Caller Camera</h2>
-<p>Click the button to start streaming</p>
-<video id="video" autoplay playsinline></video>
-<br>
 <button id="startBtn">Start Live Stream</button>
 
-<script src="https://cdn.jsdelivr.net/npm/simple-peer@9/simplepeer.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js"></script>
-
 <script>
-const video = document.getElementById("video");
 const startBtn = document.getElementById("startBtn");
-
-// Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyCxgJrDBr0PNvOG6rd-N1ox6-Tw3-dgE7U",
-  authDomain: "liveview-68758.firebaseapp.com",
-  projectId: "liveview-68758",
-  storageBucket: "liveview-68758.firebasestorage.app",
-  messagingSenderId: "1022135977860",
-  appId: "1:1022135977860:web:68cf35fba5acd02020ffd1"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
 startBtn.addEventListener("click", async () => {
-  startBtn.disabled = true;
-
   try {
-    // Open camera
-    const stream = await navigator.mediaDevices.getUserMedia({ video:{facingMode:"environment"}, audio:false });
-    video.srcObject = stream;
+    const stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode: "environment" }, audio:false });
+    document.getElementById("video").srcObject = stream;
 
-    // Firestore call document
-    const callDoc = db.collection("calls").doc("demo-call");
-
-    // SimplePeer initiator
-    const peer = new SimplePeer({ initiator:true, trickle:false, stream });
-
-    peer.on('signal', async data => {
-      await callDoc.set({ offer: data, status: "calling" });
-      console.log("Offer sent to dispatcher");
-    });
-
-    // Wait for answer from dispatcher
-    callDoc.onSnapshot(snapshot => {
-      const data = snapshot.data();
-      if (data?.answer) {
-        console.log("Answer received from dispatcher");
-        peer.signal(data.answer);
-      }
-    });
-
-    console.log("Camera ready and streaming started!");
+    // Then send offer to dispatcher (Firestore signaling)
+    console.log("Camera opened, ready to signal dispatcher");
   } catch(e) {
     alert("Camera error: " + e);
     console.error(e);
   }
 });
 </script>
-
-</body>
-</html>
