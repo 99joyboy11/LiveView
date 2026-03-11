@@ -22,46 +22,48 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-window.addEventListener('load', async () => {
+let peer, callDoc;
 
+function startCamera() {
   const video = document.createElement("video");
   video.autoplay = true;
   video.playsInline = true;
   video.style.width = "100%";
   document.body.appendChild(video);
 
-  // Request camera
-  let stream;
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-  } catch (err) {
-    alert("Camera access denied or not supported on this device.");
-    console.error(err);
-    return;
-  }
-  video.srcObject = stream;
+  navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+    .then(stream => {
+      video.srcObject = stream;
 
-  // Firestore doc for signaling
-  const callDoc = doc(db, "calls", "demo-call");
+      callDoc = doc(db, "calls", "demo-call");
 
-  // Create WebRTC peer (caller = initiator)
-  const peer = new SimplePeer({ initiator: true, trickle: false, stream });
+      // Create WebRTC peer (caller = initiator)
+      peer = new SimplePeer({ initiator: true, trickle: false, stream });
 
-  peer.on('signal', async data => {
-    await setDoc(callDoc, { offer: data });
-  });
+      peer.on('signal', async data => {
+        await setDoc(callDoc, { offer: data });
+      });
 
-  onSnapshot(callDoc, snapshot => {
-    const data = snapshot.data();
-    if (data?.answer) {
-      peer.signal(data.answer);
-    }
-  });
+      onSnapshot(callDoc, snapshot => {
+        const data = snapshot.data();
+        if (data?.answer) {
+          peer.signal(data.answer);
+        }
+      });
 
-});
+    })
+    .catch(err => {
+      alert("Camera access denied or not supported on this device.");
+      console.error(err);
+    });
+
+  // Hide the button after starting camera
+  document.getElementById("startBtn").style.display = "none";
+}
 </script>
 </head>
 <body>
-<h2>Caller Camera Streaming...</h2>
+<h2>Caller Camera Streaming</h2>
+<button id="startBtn" onclick="startCamera()">Start Camera</button>
 </body>
 </html>
