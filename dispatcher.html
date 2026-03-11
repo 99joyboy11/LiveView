@@ -2,29 +2,53 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dispatcher Viewer</title>
+<title>Dispatcher Live Camera</title>
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 <body>
+
 <h2>Dispatcher Live Camera</h2>
 <video id="remoteVideo" autoplay playsinline style="width:80%; border:1px solid #ccc;"></video>
 
 <script>
 const video = document.getElementById("remoteVideo");
 
-// Connect to PeerJS public server
-const peer = new Peer(); // auto-generated ID
+// Create PeerJS connection (auto-generated ID for dispatcher)
+const peer = new Peer();
 
-// Call the caller
-const call = peer.call('caller1', null);
-
-call.on('stream', stream => {
-  video.srcObject = stream;
+peer.on('open', () => {
+    console.log("Dispatcher Peer ready with ID:", peer.id);
+    tryCallCaller();
 });
 
-call.on('error', err => {
-  console.error("Call error:", err);
-});
+function tryCallCaller() {
+    console.log("Trying to call caller1...");
+    
+    // Attempt to call the caller peer
+    const call = peer.call('caller1', null);
+
+    if (!call) {
+        console.log("Caller not ready yet, retrying in 1 second...");
+        setTimeout(tryCallCaller, 1000);
+        return;
+    }
+
+    call.on('stream', stream => {
+        console.log("Received stream from caller!");
+        video.srcObject = stream;
+    });
+
+    call.on('close', () => {
+        console.log("Call closed, retrying in 1 second...");
+        setTimeout(tryCallCaller, 1000);
+    });
+
+    call.on('error', err => {
+        console.error("Call error:", err);
+        setTimeout(tryCallCaller, 1000);
+    });
+}
 </script>
+
 </body>
 </html>
