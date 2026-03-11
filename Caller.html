@@ -6,13 +6,16 @@
   <style>
     body { font-family: Arial; text-align:center; margin:0; padding:20px; }
     video { width:100%; max-width:500px; border:1px solid #ccc; margin-top:10px; }
+    button { padding:10px 20px; font-size:16px; }
   </style>
 </head>
 <body>
 
 <h2>Mobile Caller Camera</h2>
-<p>Tap to start streaming</p>
+<p>Click the button to start streaming</p>
 <video id="video" autoplay playsinline></video>
+<br>
+<button id="startBtn">Start Live Stream</button>
 
 <script src="https://cdn.jsdelivr.net/npm/simple-peer@9/simplepeer.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js"></script>
@@ -20,6 +23,7 @@
 
 <script>
 const video = document.getElementById("video");
+const startBtn = document.getElementById("startBtn");
 
 // Firebase config
 const firebaseConfig = {
@@ -30,36 +34,44 @@ const firebaseConfig = {
   messagingSenderId: "1022135977860",
   appId: "1:1022135977860:web:68cf35fba5acd02020ffd1"
 };
-const app = firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-const callDoc = db.collection("calls").doc("demo-call");
 
-document.body.addEventListener("click", async () => {
+startBtn.addEventListener("click", async () => {
+  startBtn.disabled = true;
+
   try {
+    // Open camera
     const stream = await navigator.mediaDevices.getUserMedia({ video:{facingMode:"environment"}, audio:false });
     video.srcObject = stream;
 
-    const peer = new SimplePeer({
-      initiator: true,
-      trickle: false,
-      stream,
-      config: { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] }
-    });
+    // Firestore call document
+    const callDoc = db.collection("calls").doc("demo-call");
+
+    // SimplePeer initiator
+    const peer = new SimplePeer({ initiator:true, trickle:false, stream });
 
     peer.on('signal', async data => {
-      await callDoc.set({ offer: data });
+      await callDoc.set({ offer: data, status: "calling" });
+      console.log("Offer sent to dispatcher");
     });
 
+    // Wait for answer from dispatcher
     callDoc.onSnapshot(snapshot => {
       const data = snapshot.data();
-      if (data?.answer) peer.signal(data.answer);
+      if (data?.answer) {
+        console.log("Answer received from dispatcher");
+        peer.signal(data.answer);
+      }
     });
 
-    console.log("Camera + streaming started!");
+    console.log("Camera ready and streaming started!");
   } catch(e) {
     alert("Camera error: " + e);
+    console.error(e);
   }
-}, { once: true });
+});
 </script>
+
 </body>
 </html>
