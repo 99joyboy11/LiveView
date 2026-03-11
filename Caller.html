@@ -3,12 +3,32 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Caller Camera</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; height: 100%; width: 100%;
+    display: flex; justify-content: center; align-items: center;
+    background: #222; color: #fff; font-family: sans-serif;
+    user-select: none;
+  }
+  #overlay {
+    position: absolute; top:0; left:0; width:100%; height:100%;
+    display:flex; justify-content:center; align-items:center;
+    font-size: 1.5em; cursor: pointer;
+    background: rgba(0,0,0,0.6);
+  }
+  video { width: 100%; height: auto; }
+</style>
+</head>
+<body>
+
+<div id="overlay">Tap anywhere to start camera</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
 import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 import SimplePeer from "https://cdn.jsdelivr.net/npm/simple-peer@9/simplepeer.min.js";
 
-// --- Your Firebase Config ---
+// --- Firebase Config ---
 const firebaseConfig = {
   apiKey: "AIzaSyCxgJrDBr0PNvOG6rd-N1ox6-Tw3-dgE7U",
   authDomain: "liveview-68758.firebaseapp.com",
@@ -18,52 +38,45 @@ const firebaseConfig = {
   appId: "1:1022135977860:web:68cf35fba5acd02020ffd1"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let peer, callDoc;
+const overlay = document.getElementById("overlay");
 
-function startCamera() {
+overlay.addEventListener("click", async () => {
+  overlay.style.display = "none";
+
   const video = document.createElement("video");
   video.autoplay = true;
   video.playsInline = true;
-  video.style.width = "100%";
   document.body.appendChild(video);
 
-  navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-    .then(stream => {
-      video.srcObject = stream;
+  // Open camera
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+  } catch(err) {
+    alert("Camera access denied or not supported");
+    console.error(err);
+    return;
+  }
+  video.srcObject = stream;
 
-      callDoc = doc(db, "calls", "demo-call");
+  const callDoc = doc(db, "calls", "demo-call");
 
-      // Create WebRTC peer (caller = initiator)
-      peer = new SimplePeer({ initiator: true, trickle: false, stream });
+  // WebRTC peer
+  const peer = new SimplePeer({ initiator: true, trickle: false, stream });
 
-      peer.on('signal', async data => {
-        await setDoc(callDoc, { offer: data });
-      });
+  peer.on('signal', async data => {
+    await setDoc(callDoc, { offer: data });
+  });
 
-      onSnapshot(callDoc, snapshot => {
-        const data = snapshot.data();
-        if (data?.answer) {
-          peer.signal(data.answer);
-        }
-      });
-
-    })
-    .catch(err => {
-      alert("Camera access denied or not supported on this device.");
-      console.error(err);
-    });
-
-  // Hide the button after starting camera
-  document.getElementById("startBtn").style.display = "none";
-}
+  onSnapshot(callDoc, snapshot => {
+    const data = snapshot.data();
+    if (data?.answer) peer.signal(data.answer);
+  });
+});
 </script>
-</head>
-<body>
-<h2>Caller Camera Streaming</h2>
-<button id="startBtn" onclick="startCamera()">Start Camera</button>
+
 </body>
 </html>
