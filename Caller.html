@@ -1,71 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Caller Live Stream</title>
+  <title>Caller Camera Live Stream</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family:Arial; text-align:center; }
+    body { font-family: Arial; text-align: center; margin:0; padding:20px; }
     video { width:100%; max-width:500px; border:1px solid #ccc; margin-top:10px; }
   </style>
 </head>
 <body>
 
-<h2>Caller Camera Live Stream</h2>
-<p>Allow camera access to start</p>
+<h2>Mobile Caller Camera</h2>
+<p>Allow camera access to start streaming</p>
 <video id="video" autoplay playsinline></video>
 
-<!-- Load Firebase and SimplePeer from CDN -->
-<script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/simple-peer@9/simplepeer.min.js"></script>
-
 <script>
-  // Firebase config
-  const firebaseConfig = {
-    apiKey: "AIzaSyCxgJrDBr0PNvOG6rd-N1ox6-Tw3-dgE7U",
-    authDomain: "liveview-68758.firebaseapp.com",
-    projectId: "liveview-68758",
-    storageBucket: "liveview-68758.firebasestorage.app",
-    messagingSenderId: "1022135977860",
-    appId: "1:1022135977860:web:68cf35fba5acd02020ffd1"
-  };
-  const app = firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+async function startCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" },
+      audio: false
+    });
+    document.getElementById("video").srcObject = stream;
 
-  const video = document.getElementById("video");
+    // Optionally store the stream for future WebRTC/streaming code
+    window.localStream = stream;
 
-  async function startCameraAndStream() {
-    try {
-      // Open camera
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-        audio: false
-      });
-      video.srcObject = stream;
-
-      // Firestore signaling
-      const callDoc = db.collection("calls").doc("demo-call");
-
-      // SimplePeer initiator
-      const peer = new SimplePeer({ initiator: true, trickle: false, stream });
-
-      peer.on('signal', async data => {
-        await callDoc.set({ offer: data });
-      });
-
-      callDoc.onSnapshot(snapshot => {
-        const data = snapshot.data();
-        if (data?.answer) peer.signal(data.answer);
-      });
-
-      console.log("Camera ready and streaming!");
-    } catch(err) {
-      alert("Camera access denied or not supported.");
-      console.error(err);
-    }
+    console.log("Camera started successfully!");
+  } catch(err) {
+    alert("Camera access denied or not supported.");
+    console.error(err);
   }
+}
 
-  startCameraAndStream();
+// Start camera automatically
+startCamera();
 </script>
 
 </body>
