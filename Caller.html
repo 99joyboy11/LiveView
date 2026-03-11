@@ -11,7 +11,7 @@
 <body>
 
 <h2>Mobile Caller Camera</h2>
-<p>Allow camera access to start streaming</p>
+<p>Tap to start streaming</p>
 <video id="video" autoplay playsinline></video>
 
 <script src="https://cdn.jsdelivr.net/npm/simple-peer@9/simplepeer.min.js"></script>
@@ -19,50 +19,47 @@
 <script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js"></script>
 
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyCxgJrDBr0PNvOG6rd-N1ox6-Tw3-dgE7U",
-    authDomain: "liveview-68758.firebaseapp.com",
-    projectId: "liveview-68758",
-    storageBucket: "liveview-68758.firebasestorage.app",
-    messagingSenderId: "1022135977860",
-    appId: "1:1022135977860:web:68cf35fba5acd02020ffd1"
-  };
-  const app = firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+const video = document.getElementById("video");
 
-  const video = document.getElementById("video");
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyCxgJrDBr0PNvOG6rd-N1ox6-Tw3-dgE7U",
+  authDomain: "liveview-68758.firebaseapp.com",
+  projectId: "liveview-68758",
+  storageBucket: "liveview-68758.firebasestorage.app",
+  messagingSenderId: "1022135977860",
+  appId: "1:1022135977860:web:68cf35fba5acd02020ffd1"
+};
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const callDoc = db.collection("calls").doc("demo-call");
 
-  async function startCameraAndStream() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-        audio: false
-      });
-      video.srcObject = stream;
+document.body.addEventListener("click", async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video:{facingMode:"environment"}, audio:false });
+    video.srcObject = stream;
 
-      // Firestore signaling
-      const callDoc = db.collection("calls").doc("demo-call");
+    const peer = new SimplePeer({
+      initiator: true,
+      trickle: false,
+      stream,
+      config: { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] }
+    });
 
-      const peer = new SimplePeer({ initiator:true, trickle:false, stream });
+    peer.on('signal', async data => {
+      await callDoc.set({ offer: data });
+    });
 
-      peer.on('signal', async data => {
-        await callDoc.set({ offer: data });
-      });
+    callDoc.onSnapshot(snapshot => {
+      const data = snapshot.data();
+      if (data?.answer) peer.signal(data.answer);
+    });
 
-      callDoc.onSnapshot(snapshot => {
-        const data = snapshot.data();
-        if (data?.answer) peer.signal(data.answer);
-      });
-
-      console.log("Camera ready and streaming!");
-    } catch(err) {
-      alert("Camera access denied or not supported.");
-      console.error(err);
-    }
+    console.log("Camera + streaming started!");
+  } catch(e) {
+    alert("Camera error: " + e);
   }
-
-  startCameraAndStream();
+}, { once: true });
 </script>
-
 </body>
 </html>
