@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Caller Camera</title>
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+</head>
+<body>
+<h2>Caller Camera Streaming...</h2>
+<video id="localVideo" autoplay playsinline style="width:100%; border:1px solid #ccc;"></video>
+
+<script>
+const video = document.getElementById("localVideo");
+
+// Open camera
+navigator.mediaDevices.getUserMedia({video:true, audio:false})
+.then(stream => {
+  video.srcObject = stream;
+
+  // Connect to PeerJS public server
+  const peer = new Peer('caller1'); // Unique caller ID
+
+  peer.on('open', id => {
+    console.log("Caller Peer ID:", id);
+  });
+
+  // When dispatcher calls, answer with camera stream
+  peer.on('call', call => {
+    call.answer(stream);
+  });
+
+})
+.catch(err => {
+  alert("Camera access denied or not supported.");
+  console.error(err);
+});
+</script>
+</body>
+</html>
