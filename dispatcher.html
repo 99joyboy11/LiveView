@@ -18,35 +18,35 @@
 <script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js"></script>
 
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyCxgJrDBr0PNvOG6rd-N1ox6-Tw3-dgE7U",
-    authDomain: "liveview-68758.firebaseapp.com",
-    projectId: "liveview-68758",
-    storageBucket: "liveview-68758.firebasestorage.app",
-    messagingSenderId: "1022135977860",
-    appId: "1:1022135977860:web:68cf35fba5acd02020ffd1"
-  };
-  const app = firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+const video = document.getElementById("dispatcherVideo");
 
-  const video = document.getElementById("dispatcherVideo");
-  const callDoc = db.collection("calls").doc("demo-call");
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyCxgJrDBr0PNvOG6rd-N1ox6-Tw3-dgE7U",
+  authDomain: "liveview-68758.firebaseapp.com",
+  projectId: "liveview-68758",
+  storageBucket: "liveview-68758.firebasestorage.app",
+  messagingSenderId: "1022135977860",
+  appId: "1:1022135977860:web:68cf35fba5acd02020ffd1"
+};
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const callDoc = db.collection("calls").doc("demo-call");
 
-  const peer = new SimplePeer({ initiator:false, trickle:false });
+const peer = new SimplePeer({ initiator:false, trickle:false, config:{ iceServers:[{ urls:"stun:stun.l.google.com:19302" }] } });
 
-  peer.on('signal', async data => {
-    await callDoc.set({ answer: data }, { merge:true });
-  });
+peer.on('signal', async data => {
+  await callDoc.set({ answer: data }, { merge:true });
+});
 
-  peer.on('stream', stream => {
-    video.srcObject = stream;
-  });
+peer.on('stream', stream => {
+  video.srcObject = stream;
+});
 
-  callDoc.onSnapshot(snapshot => {
-    const data = snapshot.data();
-    if (data?.offer) peer.signal(data.offer);
-  });
+callDoc.onSnapshot(snapshot => {
+  const data = snapshot.data();
+  if (data?.offer) peer.signal(data.offer);
+});
 </script>
-
 </body>
 </html>
