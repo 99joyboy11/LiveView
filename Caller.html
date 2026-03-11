@@ -22,32 +22,42 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Create video element
-const video = document.createElement("video");
-video.autoplay = true;
-video.playsInline = true;
-video.style.width = "100%";
-document.body.appendChild(video);
+window.addEventListener('load', async () => {
 
-// Open camera
-const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-video.srcObject = stream;
+  const video = document.createElement("video");
+  video.autoplay = true;
+  video.playsInline = true;
+  video.style.width = "100%";
+  document.body.appendChild(video);
 
-// Firestore doc for signaling
-const callDoc = doc(db, "calls", "demo-call");
-
-// Create WebRTC peer (caller = initiator)
-const peer = new SimplePeer({ initiator: true, trickle: false, stream });
-
-peer.on('signal', async data => {
-  await setDoc(callDoc, { offer: data });
-});
-
-onSnapshot(callDoc, snapshot => {
-  const data = snapshot.data();
-  if (data?.answer) {
-    peer.signal(data.answer);
+  // Request camera
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+  } catch (err) {
+    alert("Camera access denied or not supported on this device.");
+    console.error(err);
+    return;
   }
+  video.srcObject = stream;
+
+  // Firestore doc for signaling
+  const callDoc = doc(db, "calls", "demo-call");
+
+  // Create WebRTC peer (caller = initiator)
+  const peer = new SimplePeer({ initiator: true, trickle: false, stream });
+
+  peer.on('signal', async data => {
+    await setDoc(callDoc, { offer: data });
+  });
+
+  onSnapshot(callDoc, snapshot => {
+    const data = snapshot.data();
+    if (data?.answer) {
+      peer.signal(data.answer);
+    }
+  });
+
 });
 </script>
 </head>
