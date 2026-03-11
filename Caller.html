@@ -3,37 +3,55 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Caller Camera</title>
-<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+import SimplePeer from "https://cdn.jsdelivr.net/npm/simple-peer@9/simplepeer.min.js";
+
+// --- Your Firebase Config ---
+const firebaseConfig = {
+  apiKey: "AIzaSyCxgJrDBr0PNvOG6rd-N1ox6-Tw3-dgE7U",
+  authDomain: "liveview-68758.firebaseapp.com",
+  projectId: "liveview-68758",
+  storageBucket: "liveview-68758.firebasestorage.app",
+  messagingSenderId: "1022135977860",
+  appId: "1:1022135977860:web:68cf35fba5acd02020ffd1"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Create video element
+const video = document.createElement("video");
+video.autoplay = true;
+video.playsInline = true;
+video.style.width = "100%";
+document.body.appendChild(video);
+
+// Open camera
+const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+video.srcObject = stream;
+
+// Firestore doc for signaling
+const callDoc = doc(db, "calls", "demo-call");
+
+// Create WebRTC peer (caller = initiator)
+const peer = new SimplePeer({ initiator: true, trickle: false, stream });
+
+peer.on('signal', async data => {
+  await setDoc(callDoc, { offer: data });
+});
+
+onSnapshot(callDoc, snapshot => {
+  const data = snapshot.data();
+  if (data?.answer) {
+    peer.signal(data.answer);
+  }
+});
+</script>
 </head>
 <body>
 <h2>Caller Camera Streaming...</h2>
-<video id="localVideo" autoplay playsinline style="width:100%; border:1px solid #ccc;"></video>
-
-<script>
-const video = document.getElementById("localVideo");
-
-// Open camera
-navigator.mediaDevices.getUserMedia({video:true, audio:false})
-.then(stream => {
-  video.srcObject = stream;
-
-  // Connect to PeerJS public server
-  const peer = new Peer('caller1'); // Unique caller ID
-
-  peer.on('open', id => {
-    console.log("Caller Peer ID:", id);
-  });
-
-  // When dispatcher calls, answer with camera stream
-  peer.on('call', call => {
-    call.answer(stream);
-  });
-
-})
-.catch(err => {
-  alert("Camera access denied or not supported.");
-  console.error(err);
-});
-</script>
 </body>
 </html>
