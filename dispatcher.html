@@ -3,52 +3,55 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dispatcher Live Camera</title>
-<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-</head>
-<body>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+import SimplePeer from "https://cdn.jsdelivr.net/npm/simple-peer@9/simplepeer.min.js";
 
-<h2>Dispatcher Live Camera</h2>
-<video id="remoteVideo" autoplay playsinline style="width:80%; border:1px solid #ccc;"></video>
+// --- Your Firebase Config ---
+const firebaseConfig = {
+  apiKey: "AIzaSyCxgJrDBr0PNvOG6rd-N1ox6-Tw3-dgE7U",
+  authDomain: "liveview-68758.firebaseapp.com",
+  projectId: "liveview-68758",
+  storageBucket: "liveview-68758.firebasestorage.app",
+  messagingSenderId: "1022135977860",
+  appId: "1:1022135977860:web:68cf35fba5acd02020ffd1"
+};
 
-<script>
-const video = document.getElementById("remoteVideo");
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-// Create PeerJS connection (auto-generated ID for dispatcher)
-const peer = new Peer();
+// Create video element
+const video = document.createElement("video");
+video.autoplay = true;
+video.playsInline = true;
+video.style.width = "80%";
+document.body.appendChild(video);
 
-peer.on('open', () => {
-    console.log("Dispatcher Peer ready with ID:", peer.id);
-    tryCallCaller();
+// Firestore doc for signaling
+const callDoc = doc(db, "calls", "demo-call");
+
+// Create WebRTC peer (dispatcher = receiver)
+const peer = new SimplePeer({ initiator: false, trickle: false });
+
+peer.on('signal', async data => {
+  await setDoc(callDoc, { answer: data }, { merge: true });
 });
 
-function tryCallCaller() {
-    console.log("Trying to call caller1...");
-    
-    // Attempt to call the caller peer
-    const call = peer.call('caller1', null);
+peer.on('stream', stream => {
+  video.srcObject = stream;
+});
 
-    if (!call) {
-        console.log("Caller not ready yet, retrying in 1 second...");
-        setTimeout(tryCallCaller, 1000);
-        return;
-    }
-
-    call.on('stream', stream => {
-        console.log("Received stream from caller!");
-        video.srcObject = stream;
-    });
-
-    call.on('close', () => {
-        console.log("Call closed, retrying in 1 second...");
-        setTimeout(tryCallCaller, 1000);
-    });
-
-    call.on('error', err => {
-        console.error("Call error:", err);
-        setTimeout(tryCallCaller, 1000);
-    });
-}
+onSnapshot(callDoc, snapshot => {
+  const data = snapshot.data();
+  if (data?.offer) {
+    peer.signal(data.offer);
+  }
+});
 </script>
-
+</head>
+<body>
+<h2>Dispatcher Live Camera</h2>
 </body>
 </html>
