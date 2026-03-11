@@ -11,6 +11,7 @@
 <body>
 
 <h2>Dispatcher Live Camera</h2>
+<p>Waiting for caller...</p>
 <video id="dispatcherVideo" autoplay playsinline></video>
 
 <script src="https://cdn.jsdelivr.net/npm/simple-peer@9/simplepeer.min.js"></script>
@@ -29,24 +30,33 @@ const firebaseConfig = {
   messagingSenderId: "1022135977860",
   appId: "1:1022135977860:web:68cf35fba5acd02020ffd1"
 };
-const app = firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+
 const callDoc = db.collection("calls").doc("demo-call");
 
-const peer = new SimplePeer({ initiator:false, trickle:false, config:{ iceServers:[{ urls:"stun:stun.l.google.com:19302" }] } });
+// SimplePeer receiver
+const peer = new SimplePeer({ initiator:false, trickle:false });
 
 peer.on('signal', async data => {
   await callDoc.set({ answer: data }, { merge:true });
+  console.log("Answer sent to caller");
 });
 
 peer.on('stream', stream => {
   video.srcObject = stream;
+  console.log("Live stream received!");
 });
 
+// Listen for call request
 callDoc.onSnapshot(snapshot => {
   const data = snapshot.data();
-  if (data?.offer) peer.signal(data.offer);
+  if (data?.status === "calling" && data.offer) {
+    console.log("Call received, sending answer...");
+    peer.signal(data.offer);
+  }
 });
 </script>
+
 </body>
 </html>
