@@ -17,27 +17,22 @@
     let pc;
     const localVideo = document.getElementById("localVideo");
 
-    // Get camera
+    socket.emit("join", ROOM);
+
     async function start() {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       localVideo.srcObject = stream;
 
-      pc = new RTCPeerConnection({
-        iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
-      });
-
+      pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
       stream.getTracks().forEach(track => pc.addTrack(track, stream));
 
       pc.onicecandidate = event => {
-        if (event.candidate) {
-          socket.emit("ice-candidate", { to: "dispatcher", candidate: event.candidate });
-        }
+        if (event.candidate) socket.emit("ice-candidate", { room: ROOM, candidate: event.candidate });
       };
 
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
-
-      socket.emit("offer", { to: "dispatcher", offer: pc.localDescription });
+      socket.emit("offer", { room: ROOM, offer: pc.localDescription });
     }
 
     socket.on("answer", async data => {
@@ -45,12 +40,9 @@
     });
 
     socket.on("ice-candidate", async data => {
-      try {
-        await pc.addIceCandidate(data.candidate);
-      } catch (e) { console.error(e); }
+      try { await pc.addIceCandidate(data.candidate); } catch(e){ console.error(e); }
     });
 
-    socket.emit("join", ROOM);
     start();
   </script>
 </body>
