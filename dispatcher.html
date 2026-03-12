@@ -1,65 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Dispatcher Live Camera</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: Arial; text-align:center; margin:0; padding:20px; }
-    video { width:100%; max-width:600px; border:1px solid #ccc; margin-top:10px; }
-  </style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dispatcher Live View</title>
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<style>
+body{text-align:center;font-family:Arial}
+video{width:100%;max-width:700px;border:1px solid #ccc;margin-top:20px;}
+</style>
 </head>
 <body>
 
-<h2>Dispatcher Live Camera</h2>
-<p id="status">Waiting for caller...</p>
-<video id="dispatcherVideo" autoplay playsinline></video>
-
-<script src="https://cdn.jsdelivr.net/npm/simple-peer@9/simplepeer.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js"></script>
+<h2>Dispatcher Live Video</h2>
+<video id="video" autoplay playsinline></video>
 
 <script>
-const statusEl = document.getElementById("status");
-const video = document.getElementById("dispatcherVideo");
+const peer = new Peer('dispatcher', {
+    host: '0.peerjs.com',
+    port: 443,
+    path: '/',
+    secure: true
+}); // fixed ID for caller to call
 
-// Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyCxgJrDBr0PNvOG6rd-N1ox6-Tw3-dgE7U",
-  authDomain: "liveview-68758.firebaseapp.com",
-  projectId: "liveview-68758",
-  storageBucket: "liveview-68758.firebasestorage.app",
-  messagingSenderId: "1022135977860",
-  appId: "1:1022135977860:web:68cf35fba5acd02020ffd1"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+peer.on('open', id => console.log("Dispatcher ready, Peer ID:", id));
 
-const callDoc = db.collection("calls").doc("demo-call");
-const peer = new SimplePeer({ initiator: false, trickle: false });
-
-peer.on('signal', async data => {
-  await callDoc.set({ answer: data }, { merge: true });
-  console.log("Answer sent to caller");
-});
-
-peer.on('stream', stream => {
-  video.srcObject = stream;
-  video.play();
-  console.log("Live stream received!");
-  statusEl.textContent = "Live stream connected!";
-});
-
-peer.on('connect', () => console.log("Peer connected!"));
-peer.on('error', err => console.error("Peer error:", err));
-
-// Listen for call requests
-callDoc.onSnapshot(snapshot => {
-  const data = snapshot.data();
-  if (data?.status === "calling" && data.offer) {
-    console.log("Call received, sending answer...");
-    statusEl.textContent = "Incoming call...";
-    peer.signal(data.offer);
-  }
+peer.on('call', call => {
+    call.answer(); // no local stream needed
+    call.on('stream', remoteStream => {
+        document.getElementById("video").srcObject = remoteStream;
+        console.log("Receiving caller video stream");
+    });
 });
 </script>
 
