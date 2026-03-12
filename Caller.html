@@ -1,1 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Caller Camera</title>
+</head>
+<body>
+  <h2>Caller Camera Streaming</h2>
+  <video id="localVideo" autoplay muted playsinline style="width:100%;max-width:400px;"></video>
 
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    const SIGNALING_SERVER = "https://f6131d7f-1de0-47bb-b7d7-821af2af411d-00-o2b1b2rl0arz.worf.replit.dev:8080";
+    const ROOM = "live-room";
+
+    const socket = io(SIGNALING_SERVER);
+    let pc;
+    const localVideo = document.getElementById("localVideo");
+
+    // Get camera
+    async function start() {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      localVideo.srcObject = stream;
+
+      pc = new RTCPeerConnection({
+        iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+      });
+
+      stream.getTracks().forEach(track => pc.addTrack(track, stream));
+
+      pc.onicecandidate = event => {
+        if (event.candidate) {
+          socket.emit("ice-candidate", { to: "dispatcher", candidate: event.candidate });
+        }
+      };
+
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      socket.emit("offer", { to: "dispatcher", offer: pc.localDescription });
+    }
+
+    socket.on("answer", async data => {
+      await pc.setRemoteDescription(data.answer);
+    });
+
+    socket.on("ice-candidate", async data => {
+      try {
+        await pc.addIceCandidate(data.candidate);
+      } catch (e) { console.error(e); }
+    });
+
+    socket.emit("join", ROOM);
+    start();
+  </script>
+</body>
+</html>
