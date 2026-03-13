@@ -1,59 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Caller Camera</title>
+<meta charset="UTF-8">
+<title>Caller Camera</title>
+<script src="https://unpkg.com/livekit-client/dist/livekit-client.umd.js"></script>
 </head>
 <body>
-  <h2>Caller Camera Streaming</h2>
-  <video id="localVideo" autoplay muted playsinline style="width:100%;max-width:400px;"></video>
+<h2>Caller Camera</h2>
+<video id="localVideo" autoplay playsinline muted width="400"></video>
 
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-  <script>
-    const SIGNALING_SERVER = "https://your-replit-url";
-    const ROOM = "live-room";
+<script>
+const wsUrl = "wss://liveview-qb2kk5yg.livekit.cloud";
+const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzMzNzM3OTQsImlkZW50aXR5IjoibWljcm9iaXpvbmUiLCJpc3MiOiJBUElucW11cTk3ZXphTVoiLCJuYmYiOjE3NzMzNzI4OTQsInN1YiI6Im1pY3JvYml6b25lIiwidmlkZW8iOnsiY2FuUHVibGlzaCI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwicm9vbSI6Im1pY3JvYml6b25lIiwicm9vbUpvaW4iOnRydWV9fQ.hzpCo2PScYAaCiJEqdlN6v3SGXJ7NetkiPiOGLUT5Dc";
 
-    const socket = io(SIGNALING_SERVER);
-    let pc;
-    const localVideo = document.getElementById("localVideo");
+const room = new Livekit.Room();
 
-    socket.emit("join", ROOM);
-
-    async function start() {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-      localVideo.srcObject = stream;
-
-      pc = new RTCPeerConnection({
-        iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
-          {
-            urls: "turn:turn.anyfirewall.com:443?transport=tcp",
-            username: "webrtc",
-            credential: "webrtc"
-          }
-        ]
-      });
-
-      stream.getTracks().forEach(track => pc.addTrack(track, stream));
-
-      pc.onicecandidate = event => {
-        if (event.candidate) socket.emit("ice-candidate", { room: ROOM, candidate: event.candidate });
-      };
-
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      socket.emit("offer", { room: ROOM, offer: pc.localDescription });
-    }
-
-    socket.on("answer", async data => {
-      await pc.setRemoteDescription(data.answer);
-    });
-
-    socket.on("ice-candidate", async data => {
-      try { await pc.addIceCandidate(data.candidate); } catch(e){ console.error(e); }
-    });
-
-    start();
-  </script>
+room.connect(wsUrl, token).then(async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    document.getElementById("localVideo").srcObject = stream;
+    stream.getTracks().forEach(track => room.localParticipant.publishTrack(track));
+});
+</script>
 </body>
 </html>
