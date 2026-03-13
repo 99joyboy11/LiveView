@@ -2,35 +2,43 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Caller Camera (Mobile-Ready)</title>
+<title>Caller Camera (Mobile)</title>
 <style>
   body { font-family: sans-serif; text-align: center; }
   video { margin-top: 20px; border: 1px solid #ccc; width: 300px; }
   button { padding: 10px 20px; font-size: 16px; margin-top: 20px; }
 </style>
 <script type="module">
-import { Room, LocalVideoTrack, VideoPresets } from 'https://unpkg.com/livekit-client/dist/livekit-client.mjs';
+import { Room, LocalVideoTrack } from 'https://unpkg.com/livekit-client/dist/livekit-client.mjs';
 
 const wsUrl = "wss://liveview-qb2kk5yg.livekit.cloud";
 const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODMzNzgxMTEsImlkZW50aXR5IjoibWljcm9iaXpvbmUiLCJpc3MiOiJBUElnZGdEbTRNVlBheEUiLCJuYmYiOjE3NzMzNzgxMTIsInN1YiI6Im1pY3JvYml6b25lIiwidmlkZW8iOnsiY2FuUHVibGlzaCI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwicm9vbSI6ImxpdmVmZWVkIiwicm9vbUpvaW4iOnRydWV9fQ.qVjp4hRWcmo5VVdCfP1-Y2bHWY27meQV08N2jwCgjPY";
 
-const startCamera = async () => {
-  const room = new Room();
-  await room.connect(wsUrl, token);
+async function startCamera() {
+  try {
+    // Step 1: Request camera manually for mobile compatibility
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    const localVideo = document.getElementById('localVideo');
+    localVideo.srcObject = stream;
 
-  const track = await LocalVideoTrack.create({ resolution: VideoPresets.h720 });
-  await room.localParticipant.publishTrack(track);
+    // Step 2: Connect to LiveKit and publish track
+    const room = new Room();
+    await room.connect(wsUrl, token);
 
-  const localVideo = document.getElementById('localVideo');
-  localVideo.srcObject = new MediaStream([track.mediaStreamTrack]);
+    const track = new LocalVideoTrack(stream.getVideoTracks()[0]);
+    await room.localParticipant.publishTrack(track);
 
-  alert("Camera started and streaming to room: livefeed");
-};
+    alert("Camera started and streaming to dispatcher!");
+  } catch (err) {
+    console.error("Failed to access camera:", err);
+    alert("Cannot access camera. Please allow camera permission and try again.");
+  }
+}
 </script>
 </head>
 <body>
-<h2>Caller Camera (Mobile-Ready)</h2>
-<p>Click the button below to start streaming:</p>
+<h2>Caller Camera (Mobile)</h2>
+<p>Tap the button below to start streaming your camera:</p>
 <button onclick="startCamera()">Start Camera</button>
 <video id="localVideo" autoplay muted playsinline></video>
 </body>
