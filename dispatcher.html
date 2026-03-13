@@ -15,16 +15,14 @@ const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODMzNzQ5NzAsImlk
 
 const room = new Livekit.Room();
 
-room.connect(wsUrl, token).catch(err => {
-    console.error("Failed to connect dispatcher:", err);
-});
+room.connect(wsUrl, token).catch(err => console.error(err));
 
 room.on("trackSubscribed", (track) => {
-    const video = document.createElement("video");
-    video.autoplay = true;
-    video.playsInline = true;
-    track.attach(video);
-    document.getElementById("videos").appendChild(video);
+  const video = document.createElement("video");
+  video.autoplay = true;
+  video.playsInline = true;
+  track.attach(video);
+  document.getElementById("videos").appendChild(video);
 });
 </script>
 </body>
