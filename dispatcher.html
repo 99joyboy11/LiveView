@@ -2,28 +2,29 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Dispatcher View</title>
-<script src="https://unpkg.com/livekit-client/dist/livekit-client.umd.js"></script>
-</head>
-<body>
-<h2>Dispatcher View</h2>
-<div id="videos"></div>
+<title>Live Feed</title>
+<script type="module">
+import { Room } from 'https://unpkg.com/livekit-client/dist/livekit-client.mjs';
 
-<script>
 const wsUrl = "wss://liveview-qb2kk5yg.livekit.cloud";
 const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODMzNzQ5NzAsImlkZW50aXR5IjoibWljcm9iaXpvbmUiLCJpc3MiOiJBUEl0cjk1NHRBbVY1b0oiLCJuYmYiOjE3NzMzNzQ5NzEsInN1YiI6Im1pY3JvYml6b25lIiwidmlkZW8iOnsiY2FuUHVibGlzaCI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwicm9vbSI6Im1pY3JvYml6b25lIiwicm9vbUpvaW4iOnRydWV9fQ.ISjh6Zg2Dl_8GVq7fOKB90HUVZz7PCcd55M4CDm5sww";
 
-const room = new Livekit.Room();
+const room = new Room();
+await room.connect(wsUrl, token);
 
-room.connect(wsUrl, token).catch(err => console.error(err));
+const videosDiv = document.createElement('div');
+document.body.appendChild(videosDiv);
 
-room.on("trackSubscribed", (track) => {
-  const video = document.createElement("video");
-  video.autoplay = true;
-  video.playsInline = true;
-  track.attach(video);
-  document.getElementById("videos").appendChild(video);
+room.on('trackSubscribed', track => {
+  const videoEl = document.createElement('video');
+  videoEl.autoplay = true;
+  videoEl.playsInline = true;
+  track.attach(videoEl);
+  videosDiv.appendChild(videoEl);
 });
 </script>
+</head>
+<body>
+<h2>Dispatcher View</h2>
 </body>
 </html>
