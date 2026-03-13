@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Caller Camera Mobile-Friendly</title>
+<title>Caller Camera</title>
 <style>
 body { font-family: sans-serif; text-align: center; }
 video { margin-top: 20px; border: 1px solid #ccc; width: 300px; }
@@ -11,41 +11,35 @@ button { padding: 10px 20px; font-size: 16px; margin-top: 20px; }
 <script type="module">
 import { Room, LocalVideoTrack } from 'https://unpkg.com/livekit-client/dist/livekit-client.mjs';
 
+// LiveKit WebSocket URL
 const wsUrl = "wss://liveview-qb2kk5yg.livekit.cloud";
 
-// Function to fetch a fresh token from your server
-async function getToken() {
-  const res = await fetch('https://YOUR_TOKEN_SERVER_URL/getToken'); // replace with real URL
-  const data = await res.json();
-  return data.token;
-}
+// Use your valid token
+const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODMzNzgxMTEsImlkZW50aXR5IjoibWljcm9iaXpvbmUiLCJpc3MiOiJBUElnZGdEbTRNVlBheEUiLCJuYmYiOjE3NzMzNzgxMTIsInN1YiI6Im1pY3JvYml6b25lIiwidmlkZW8iOnsiY2FuUHVibGlzaCI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwicm9vbSI6ImxpdmVmZWVkIiwicm9vbUpvaW4iOnRydWV9fQ.qVjp4hRWcmo5VVdCfP1-Y2bHWY27meQV08N2jwCgjPY";
 
 document.getElementById('startBtn').addEventListener('click', async () => {
   try {
-    // Step 1: Camera access
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    document.getElementById('localVideo').srcObject = stream;
+    const localVideo = document.getElementById('localVideo');
+    localVideo.srcObject = stream;
 
-    // Step 2: Connect to LiveKit
-    const token = await getToken(); // fresh token
     const room = new Room();
     await room.connect(wsUrl, token);
 
-    // Step 3: Publish track
     const track = new LocalVideoTrack(stream.getVideoTracks()[0]);
     await room.localParticipant.publishTrack(track);
 
     alert("Streaming now!");
   } catch (err) {
     console.error(err);
-    alert("Camera access failed. Check permissions or token server.");
+    alert("Camera access failed. Make sure permissions are allowed.");
   }
 });
 </script>
 </head>
 <body>
 <h2>Caller Camera</h2>
-<p>Tap the button below to start streaming your camera:</p>
+<p>Tap the button below to start streaming:</p>
 <button id="startBtn">Start Camera</button>
 <video id="localVideo" autoplay muted playsinline></video>
 </body>
