@@ -2,12 +2,12 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Dispatcher View - Desktop Test</title>
+<title>Dispatcher View</title>
 <script type="module">
 import { Room } from 'https://unpkg.com/livekit-client/dist/livekit-client.mjs';
 
 const wsUrl = "wss://liveview-qb2kk5yg.livekit.cloud";
-const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODMzNzQ5NzAsImlkZW50aXR5IjoibWljcm9iaXpvbmUiLCJpc3MiOiJBUEl0cjk1NHRBbVY1b0oiLCJuYmYiOjE3NzMzNzQ5NzEsInN1YiI6Im1pY3JvYml6b25lIiwidmlkZW8iOnsiY2FuUHVibGlzaCI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwicm9vbSI6Im1pY3JvYml6b25lIiwicm9vbUpvaW4iOnRydWV9fQ.ISjh6Zg2Dl_8GVq7fOKB90HUVZz7PCcd55M4CDm5sww";
+const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODMzNzgxMTEsImlkZW50aXR5IjoibWljcm9iaXpvbmUiLCJpc3MiOiJBUElnZGdEbTRNVlBheEUiLCJuYmYiOjE3NzMzNzgxMTIsInN1YiI6Im1pY3JvYml6b25lIiwidmlkZW8iOnsiY2FuUHVibGlzaCI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwicm9vbSI6ImxpdmVmZWVkIiwicm9vbUpvaW4iOnRydWV9fQ.qVjp4hRWcmo5VVdCfP1-Y2bHWY27meQV08N2jwCgjPY";
 
 const room = new Room();
 await room.connect(wsUrl, token);
@@ -22,9 +22,17 @@ room.on('trackSubscribed', track => {
   track.attach(videoEl);
   videosDiv.appendChild(videoEl);
 });
+
+room.on('participantConnected', participant => {
+  console.log('Participant connected:', participant.identity);
+});
+
+room.on('participantDisconnected', participant => {
+  console.log('Participant disconnected:', participant.identity);
+});
 </script>
 </head>
 <body>
-<h2>Dispatcher View - Desktop Test</h2>
+<h2>Dispatcher View</h2>
 </body>
 </html>
