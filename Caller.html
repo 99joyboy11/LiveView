@@ -7,18 +7,30 @@
 </head>
 <body>
 <h2>Caller Camera</h2>
+
+<button id="startBtn">Start Camera</button>
 <video id="localVideo" autoplay playsinline muted width="400"></video>
 
 <script>
 const wsUrl = "wss://liveview-qb2kk5yg.livekit.cloud";
 const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzMzNzM3OTQsImlkZW50aXR5IjoibWljcm9iaXpvbmUiLCJpc3MiOiJBUElucW11cTk3ZXphTVoiLCJuYmYiOjE3NzMzNzI4OTQsInN1YiI6Im1pY3JvYml6b25lIiwidmlkZW8iOnsiY2FuUHVibGlzaCI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwicm9vbSI6Im1pY3JvYml6b25lIiwicm9vbUpvaW4iOnRydWV9fQ.hzpCo2PScYAaCiJEqdlN6v3SGXJ7NetkiPiOGLUT5Dc";
 
-const room = new Livekit.Room();
+document.getElementById("startBtn").addEventListener("click", async () => {
+  const room = new Livekit.Room();
 
-room.connect(wsUrl, token).then(async () => {
+  try {
+    await room.connect(wsUrl, token);
+
     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
     document.getElementById("localVideo").srcObject = stream;
+
     stream.getTracks().forEach(track => room.localParticipant.publishTrack(track));
+
+    alert("Camera started and streaming!");
+  } catch (err) {
+    console.error("Error connecting or accessing camera:", err);
+    alert("Failed to start camera. Check permissions.");
+  }
 });
 </script>
 </body>
