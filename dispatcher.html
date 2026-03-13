@@ -11,16 +11,9 @@ video { margin: 10px; border: 1px solid #ccc; width: 300px; }
 import { Room } from 'https://unpkg.com/livekit-client/dist/livekit-client.mjs';
 
 const wsUrl = "wss://liveview-qb2kk5yg.livekit.cloud";
-
-// Use same token server if dispatcher also needs a token
-async function getToken() {
-  const res = await fetch('https://YOUR_TOKEN_SERVER_URL/getToken');
-  const data = await res.json();
-  return data.token;
-}
+const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODMzNzgxMTEsImlkZW50aXR5IjoibWljcm9iaXpvbmUiLCJpc3MiOiJBUElnZGdEbTRNVlBheEUiLCJuYmYiOjE3NzMzNzgxMTIsInN1YiI6Im1pY3JvYml6b25lIiwidmlkZW8iOnsiY2FuUHVibGlzaCI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwicm9vbSI6ImxpdmVmZWVkIiwicm9vbUpvaW4iOnRydWV9fQ.qVjp4hRWcmo5VVdCfP1-Y2bHWY27meQV08N2jwCgjPY";
 
 async function init() {
-  const token = await getToken();
   const room = new Room();
   await room.connect(wsUrl, token);
 
