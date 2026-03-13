@@ -2,44 +2,51 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Caller Camera (Mobile)</title>
+<title>Caller Camera Mobile-Friendly</title>
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  video { margin-top: 20px; border: 1px solid #ccc; width: 300px; }
-  button { padding: 10px 20px; font-size: 16px; margin-top: 20px; }
+body { font-family: sans-serif; text-align: center; }
+video { margin-top: 20px; border: 1px solid #ccc; width: 300px; }
+button { padding: 10px 20px; font-size: 16px; margin-top: 20px; }
 </style>
 <script type="module">
 import { Room, LocalVideoTrack } from 'https://unpkg.com/livekit-client/dist/livekit-client.mjs';
 
 const wsUrl = "wss://liveview-qb2kk5yg.livekit.cloud";
-const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODMzNzgxMTEsImlkZW50aXR5IjoibWljcm9iaXpvbmUiLCJpc3MiOiJBUElnZGdEbTRNVlBheEUiLCJuYmYiOjE3NzMzNzgxMTIsInN1YiI6Im1pY3JvYml6b25lIiwidmlkZW8iOnsiY2FuUHVibGlzaCI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwicm9vbSI6ImxpdmVmZWVkIiwicm9vbUpvaW4iOnRydWV9fQ.qVjp4hRWcmo5VVdCfP1-Y2bHWY27meQV08N2jwCgjPY";
 
-async function startCamera() {
+// Function to fetch a fresh token from your server
+async function getToken() {
+  const res = await fetch('https://YOUR_TOKEN_SERVER_URL/getToken'); // replace with real URL
+  const data = await res.json();
+  return data.token;
+}
+
+document.getElementById('startBtn').addEventListener('click', async () => {
   try {
-    // Step 1: Request camera manually for mobile compatibility
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-    const localVideo = document.getElementById('localVideo');
-    localVideo.srcObject = stream;
+    // Step 1: Camera access
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    document.getElementById('localVideo').srcObject = stream;
 
-    // Step 2: Connect to LiveKit and publish track
+    // Step 2: Connect to LiveKit
+    const token = await getToken(); // fresh token
     const room = new Room();
     await room.connect(wsUrl, token);
 
+    // Step 3: Publish track
     const track = new LocalVideoTrack(stream.getVideoTracks()[0]);
     await room.localParticipant.publishTrack(track);
 
-    alert("Camera started and streaming to dispatcher!");
+    alert("Streaming now!");
   } catch (err) {
-    console.error("Failed to access camera:", err);
-    alert("Cannot access camera. Please allow camera permission and try again.");
+    console.error(err);
+    alert("Camera access failed. Check permissions or token server.");
   }
-}
+});
 </script>
 </head>
 <body>
-<h2>Caller Camera (Mobile)</h2>
+<h2>Caller Camera</h2>
 <p>Tap the button below to start streaming your camera:</p>
-<button onclick="startCamera()">Start Camera</button>
+<button id="startBtn">Start Camera</button>
 <video id="localVideo" autoplay muted playsinline></video>
 </body>
 </html>
