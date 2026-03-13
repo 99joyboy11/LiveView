@@ -7,12 +7,10 @@
 </head>
 <body>
 <h2>Caller Camera</h2>
-
 <button id="startBtn">Start Camera</button>
 <video id="localVideo" autoplay playsinline muted width="400"></video>
 
 <script>
-// LiveKit Cloud info
 const wsUrl = "wss://liveview-qb2kk5yg.livekit.cloud";
 const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODMzNzQ5NzAsImlkZW50aXR5IjoibWljcm9iaXpvbmUiLCJpc3MiOiJBUEl0cjk1NHRBbVY1b0oiLCJuYmYiOjE3NzMzNzQ5NzEsInN1YiI6Im1pY3JvYml6b25lIiwidmlkZW8iOnsiY2FuUHVibGlzaCI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwicm9vbSI6Im1pY3JvYml6b25lIiwicm9vbUpvaW4iOnRydWV9fQ.ISjh6Zg2Dl_8GVq7fOKB90HUVZz7PCcd55M4CDm5sww";
 
@@ -29,8 +27,8 @@ document.getElementById("startBtn").addEventListener("click", async () => {
 
     alert("Camera started and streaming!");
   } catch (err) {
-    console.error("Error:", err);
-    alert("Failed to start camera. Make sure you allow camera access and are on HTTPS.");
+    console.error(err);
+    alert("Camera failed. Make sure you allow access and are on HTTPS.");
   }
 });
 </script>
