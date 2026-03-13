@@ -2,35 +2,38 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Caller Camera</title>
-<script src="https://unpkg.com/livekit-client/dist/livekit-client.umd.js"></script>
-</head>
-<body>
-<h2>Caller Camera</h2>
-<button id="startBtn">Start Camera</button>
-<video id="localVideo" autoplay playsinline muted width="400"></video>
+<title>Emargency Video Call</title>
+<script type="module">
+import { Room, LocalVideoTrack, VideoPresets } from 'https://unpkg.com/livekit-client/dist/livekit-client.mjs';
 
-<script>
 const wsUrl = "wss://liveview-qb2kk5yg.livekit.cloud";
 const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODMzNzQ5NzAsImlkZW50aXR5IjoibWljcm9iaXpvbmUiLCJpc3MiOiJBUEl0cjk1NHRBbVY1b0oiLCJuYmYiOjE3NzMzNzQ5NzEsInN1YiI6Im1pY3JvYml6b25lIiwidmlkZW8iOnsiY2FuUHVibGlzaCI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwicm9vbSI6Im1pY3JvYml6b25lIiwicm9vbUpvaW4iOnRydWV9fQ.ISjh6Zg2Dl_8GVq7fOKB90HUVZz7PCcd55M4CDm5sww";
 
-document.getElementById("startBtn").addEventListener("click", async () => {
-  const room = new Livekit.Room();
+const startBtn = document.createElement('button');
+startBtn.textContent = 'Start Camera';
+document.body.appendChild(startBtn);
 
-  try {
-    await room.connect(wsUrl, token);
+const localVideo = document.createElement('video');
+localVideo.autoplay = true;
+localVideo.muted = true;
+localVideo.playsInline = true;
+localVideo.width = 400;
+document.body.appendChild(localVideo);
 
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-    document.getElementById("localVideo").srcObject = stream;
+startBtn.addEventListener('click', async () => {
+  const room = new Room();
+  await room.connect(wsUrl, token);
 
-    stream.getTracks().forEach(track => room.localParticipant.publishTrack(track));
+  const track = await LocalVideoTrack.create({ resolution: VideoPresets.h720 });
+  room.localParticipant.publishTrack(track);
 
-    alert("Camera started and streaming!");
-  } catch (err) {
-    console.error(err);
-    alert("Camera failed. Make sure you allow access and are on HTTPS.");
-  }
+  localVideo.srcObject = track.mediaStreamTrack ? new MediaStream([track.mediaStreamTrack]) : null;
+
+  alert("Camera started and streaming!");
 });
 </script>
+</head>
+<body>
+<h2>Caller Camera</h2>
 </body>
 </html>
