@@ -2,12 +2,12 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Caller Camera - Desktop Test</title>
+<title>Caller Camera</title>
 <script type="module">
 import { Room, LocalVideoTrack, VideoPresets } from 'https://unpkg.com/livekit-client/dist/livekit-client.mjs';
 
 const wsUrl = "wss://liveview-qb2kk5yg.livekit.cloud";
-const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODMzNzQ5NzAsImlkZW50aXR5IjoibWljcm9iaXpvbmUiLCJpc3MiOiJBUEl0cjk1NHRBbVY1b0oiLCJuYmYiOjE3NzMzNzQ5NzEsInN1YiI6Im1pY3JvYml6b25lIiwidmlkZW8iOnsiY2FuUHVibGlzaCI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwicm9vbSI6Im1pY3JvYml6b25lIiwicm9vbUpvaW4iOnRydWV9fQ.ISjh6Zg2Dl_8GVq7fOKB90HUVZz7PCcd55M4CDm5sww";
+const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODMzNzgxMTEsImlkZW50aXR5IjoibWljcm9iaXpvbmUiLCJpc3MiOiJBUElnZGdEbTRNVlBheEUiLCJuYmYiOjE3NzMzNzgxMTIsInN1YiI6Im1pY3JvYml6b25lIiwidmlkZW8iOnsiY2FuUHVibGlzaCI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwicm9vbSI6ImxpdmVmZWVkIiwicm9vbUpvaW4iOnRydWV9fQ.qVjp4hRWcmo5VVdCfP1-Y2bHWY27meQV08N2jwCgjPY";
 
 const startBtn = document.createElement('button');
 startBtn.textContent = 'Start Camera';
@@ -27,13 +27,13 @@ startBtn.addEventListener('click', async () => {
   const track = await LocalVideoTrack.create({ resolution: VideoPresets.h720 });
   room.localParticipant.publishTrack(track);
 
-  localVideo.srcObject = track.mediaStreamTrack ? new MediaStream([track.mediaStreamTrack]) : null;
+  localVideo.srcObject = new MediaStream([track.mediaStreamTrack]);
 
-  alert("Camera started and streaming!");
+  alert("Camera started and streaming to room: livefeed");
 });
 </script>
 </head>
 <body>
-<h2>Caller Camera - Desktop Test</h2>
+<h2>Caller Camera</h2>
 </body>
 </html>
