@@ -2,7 +2,12 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Caller Camera</title>
+<title>Caller Camera (Mobile-Ready)</title>
+<style>
+  body { font-family: sans-serif; text-align: center; }
+  video { margin-top: 20px; border: 1px solid #ccc; }
+  button { padding: 10px 20px; font-size: 16px; }
+</style>
 <script type="module">
 import { Room, LocalVideoTrack, VideoPresets } from 'https://unpkg.com/livekit-client/dist/livekit-client.mjs';
 
@@ -17,16 +22,18 @@ const localVideo = document.createElement('video');
 localVideo.autoplay = true;
 localVideo.muted = true;
 localVideo.playsInline = true;
-localVideo.width = 400;
+localVideo.width = 300;
 document.body.appendChild(localVideo);
 
 startBtn.addEventListener('click', async () => {
+  // Required: user gesture to allow camera on mobile
   const room = new Room();
   await room.connect(wsUrl, token);
 
   const track = await LocalVideoTrack.create({ resolution: VideoPresets.h720 });
-  room.localParticipant.publishTrack(track);
+  await room.localParticipant.publishTrack(track);
 
+  // Show local video
   localVideo.srcObject = new MediaStream([track.mediaStreamTrack]);
 
   alert("Camera started and streaming to room: livefeed");
@@ -34,6 +41,7 @@ startBtn.addEventListener('click', async () => {
 </script>
 </head>
 <body>
-<h2>Caller Camera</h2>
+<h2>Caller Camera (Mobile-Ready)</h2>
+<p>Click "Start Camera" to begin streaming.</p>
 </body>
 </html>
