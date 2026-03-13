@@ -3,36 +3,46 @@
 <head>
 <meta charset="UTF-8">
 <title>Dispatcher View</title>
+<style>
+  body { font-family: sans-serif; text-align: center; }
+  video { margin: 10px; border: 1px solid #ccc; width: 300px; }
+</style>
 <script type="module">
 import { Room } from 'https://unpkg.com/livekit-client/dist/livekit-client.mjs';
 
 const wsUrl = "wss://liveview-qb2kk5yg.livekit.cloud";
 const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODMzNzgxMTEsImlkZW50aXR5IjoibWljcm9iaXpvbmUiLCJpc3MiOiJBUElnZGdEbTRNVlBheEUiLCJuYmYiOjE3NzMzNzgxMTIsInN1YiI6Im1pY3JvYml6b25lIiwidmlkZW8iOnsiY2FuUHVibGlzaCI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwicm9vbSI6ImxpdmVmZWVkIiwicm9vbUpvaW4iOnRydWV9fQ.qVjp4hRWcmo5VVdCfP1-Y2bHWY27meQV08N2jwCgjPY";
 
-const room = new Room();
-await room.connect(wsUrl, token);
+async function init() {
+  const room = new Room();
+  await room.connect(wsUrl, token);
 
-const videosDiv = document.createElement('div');
-document.body.appendChild(videosDiv);
+  const videosDiv = document.createElement('div');
+  document.body.appendChild(videosDiv);
 
-room.on('trackSubscribed', track => {
-  const videoEl = document.createElement('video');
-  videoEl.autoplay = true;
-  videoEl.playsInline = true;
-  track.attach(videoEl);
-  videosDiv.appendChild(videoEl);
-});
+  // Subscribe to tracks from any participant
+  room.on('trackSubscribed', track => {
+    const videoEl = document.createElement('video');
+    videoEl.autoplay = true;
+    videoEl.playsInline = true;
+    track.attach(videoEl);
+    videosDiv.appendChild(videoEl);
+  });
 
-room.on('participantConnected', participant => {
-  console.log('Participant connected:', participant.identity);
-});
+  room.on('participantConnected', participant => {
+    console.log('Participant connected:', participant.identity);
+  });
 
-room.on('participantDisconnected', participant => {
-  console.log('Participant disconnected:', participant.identity);
-});
+  room.on('participantDisconnected', participant => {
+    console.log('Participant disconnected:', participant.identity);
+  });
+}
+
+init();
 </script>
 </head>
 <body>
 <h2>Dispatcher View</h2>
+<p>Waiting for caller video...</p>
 </body>
 </html>
