@@ -5,8 +5,8 @@
 <title>Caller Camera (Mobile-Ready)</title>
 <style>
   body { font-family: sans-serif; text-align: center; }
-  video { margin-top: 20px; border: 1px solid #ccc; }
-  button { padding: 10px 20px; font-size: 16px; }
+  video { margin-top: 20px; border: 1px solid #ccc; width: 300px; }
+  button { padding: 10px 20px; font-size: 16px; margin-top: 20px; }
 </style>
 <script type="module">
 import { Room, LocalVideoTrack, VideoPresets } from 'https://unpkg.com/livekit-client/dist/livekit-client.mjs';
@@ -14,34 +14,24 @@ import { Room, LocalVideoTrack, VideoPresets } from 'https://unpkg.com/livekit-c
 const wsUrl = "wss://liveview-qb2kk5yg.livekit.cloud";
 const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODMzNzgxMTEsImlkZW50aXR5IjoibWljcm9iaXpvbmUiLCJpc3MiOiJBUElnZGdEbTRNVlBheEUiLCJuYmYiOjE3NzMzNzgxMTIsInN1YiI6Im1pY3JvYml6b25lIiwidmlkZW8iOnsiY2FuUHVibGlzaCI6dHJ1ZSwiY2FuUHVibGlzaERhdGEiOnRydWUsImNhblN1YnNjcmliZSI6dHJ1ZSwicm9vbSI6ImxpdmVmZWVkIiwicm9vbUpvaW4iOnRydWV9fQ.qVjp4hRWcmo5VVdCfP1-Y2bHWY27meQV08N2jwCgjPY";
 
-const startBtn = document.createElement('button');
-startBtn.textContent = 'Start Camera';
-document.body.appendChild(startBtn);
-
-const localVideo = document.createElement('video');
-localVideo.autoplay = true;
-localVideo.muted = true;
-localVideo.playsInline = true;
-localVideo.width = 300;
-document.body.appendChild(localVideo);
-
-startBtn.addEventListener('click', async () => {
-  // Required: user gesture to allow camera on mobile
+const startCamera = async () => {
   const room = new Room();
   await room.connect(wsUrl, token);
 
   const track = await LocalVideoTrack.create({ resolution: VideoPresets.h720 });
   await room.localParticipant.publishTrack(track);
 
-  // Show local video
+  const localVideo = document.getElementById('localVideo');
   localVideo.srcObject = new MediaStream([track.mediaStreamTrack]);
 
   alert("Camera started and streaming to room: livefeed");
-});
+};
 </script>
 </head>
 <body>
 <h2>Caller Camera (Mobile-Ready)</h2>
-<p>Click "Start Camera" to begin streaming.</p>
+<p>Click the button below to start streaming:</p>
+<button onclick="startCamera()">Start Camera</button>
+<video id="localVideo" autoplay muted playsinline></video>
 </body>
 </html>
